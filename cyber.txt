@@ -1,0 +1,215 @@
+
+Q1. Scan UDP ports of a target host (e.g., 192.168.1.1)
+Command:
+nmap -sU 192.168.1.1
+Explanation:
+- Scans for open UDP ports.
+- UDP is connectionless; thus, results may show many ports as "open|filtered."
+
+Q2. Scan a host to detect firewalls
+Command:
+nmap -sA 192.168.1.1
+Explanation:
+- ACK scan to determine firewall presence.
+- If all ports are unfiltered, likely no firewall. If all filtered, firewall likely drops unsolicited packets.
+
+Q3. Increase scan speed on multiple IPs
+Command:
+nmap -T4 192.168.1.10 192.168.1.13 192.168.1.30 192.168.12.90
+Explanation:
+- T4 timing increases scan speed. Trade-off with stealth.
+
+Q4. Full TCP port scan on a host
+Command:
+nmap -p- -T4 192.168.1.100
+Explanation:
+- Scans all 65535 TCP ports. T4 speeds it up.
+
+Q5. Scan multiple targets from file
+Command:
+nmap -iL targets.txt
+Explanation:
+- Reads IPs from targets.txt and scans them.
+
+Q6. Display filter for HTTP traffic
+Filter:
+http
+Explanation:
+- Shows only HTTP packets in Wireshark.
+
+Q7. Filter packets from specific IP (192.168.1.5)
+Filter:
+ip.src == 192.168.1.5
+Explanation:
+- Filters all packets from specified IP.
+
+Q8. Follow TCP stream in Wireshark
+Steps:
+- Right-click a TCP packet > Follow > TCP Stream
+Explanation:
+- Shows full conversation between client and server.
+
+Q9. Identify MAC address in Wireshark
+Steps:
+- Look in Ethernet II section > Source/Destination
+Explanation:
+- Shows MAC address of devices.
+
+Q10. Field showing domain name in DNS packet
+Field:
+dns.qry.name
+Explanation:
+- Displays queried domain in DNS request.
+
+Q11. Filter for web browsing traffic
+Filter:
+http || tls
+Explanation:
+- Shows HTTP and HTTPS packets.
+
+Q12. Analyze TCP handshake
+Steps:
+- Filter: tcp.flags.syn == 1
+- Look for SYN, SYN-ACK, ACK
+Explanation:
+- Displays 3-way handshake sequence.
+
+Q13. Protocol hierarchy in Wireshark
+Steps:
+- Statistics > Protocol Hierarchy
+Explanation:
+- Visual breakdown of protocols and packet percentages.
+
+Q14. Identify cleartext data (HTTP)
+Steps:
+- Filter: http
+- Follow TCP Stream
+Explanation:
+- Shows readable data transmitted over HTTP.
+
+Q15. Filter by IP and port in Wireshark
+Filter:
+ip.addr == 192.168.1.1 && tcp.port == 80
+Explanation:
+- Shows packets to/from specific IP and port.
+
+Q16. Generate CA key, CSR, and cert
+Commands:
+openssl genrsa -out ca.key 2048
+openssl req -x509 -new -key ca.key -out ca.crt -days 365
+openssl req -newkey rsa:2048 -nodes -keyout server.key -out server.csr
+openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 365
+Explanation:
+- Creates CA and signs server certificate.
+
+Q17. Encrypt file with symmetric key and verify MD5
+Commands:
+openssl enc -aes-256-cbc -salt -in file.txt -out file.enc -pass pass:mykey
+echo -n "mykey" | md5sum > key.md5
+openssl enc -d -aes-256-cbc -in file.enc -out file.dec -pass pass:mykey
+echo -n "mykey" | md5sum > key2.md5
+diff key.md5 key2.md5
+Explanation:
+- Ensures key integrity using MD5.
+
+Q18. PKI with password-based key derivation and AES
+Commands:
+openssl enc -aes-256-cbc -pbkdf2 -in plain.txt -out encrypted.txt
+openssl enc -d -aes-256-cbc -pbkdf2 -in encrypted.txt -out decrypted.txt
+diff plain.txt decrypted.txt
+Explanation:
+- Uses PBKDF2 and AES for secure encryption.
+
+Q19. TCP connect scan on IP range and extract port 22
+Command:
+nmap -sT -p 22 192.168.1.1-50 -oA scan_output
+grep "22/tcp open" scan_output.gnmap | awk '{print $2}'
+Explanation:
+- Performs connect scan and extracts IPs with SSH open.
+
+Q20. Service version detection for HTTP/HTTPS
+Command:
+nmap -sV -p 80,443 192.168.1.100 -oN svc.txt
+grep -iE "http|https" svc.txt
+Explanation:
+- Identifies service versions and extracts web protocols.
+
+Q21. OS detection and formatting
+Command:
+nmap -O 192.168.1.100 -oN os_result.txt
+grep -i "os details\|accuracy" os_result.txt
+Explanation:
+- Displays OS name and accuracy from scan.
+
+Q22. Nmap script scan for vulnerabilities
+Command:
+nmap -p 80,443 --script vuln 192.168.1.100 -oN vuln_output.txt
+grep -i "CVE\|VULNERABLE" vuln_output.txt | sort | uniq
+Explanation:
+- Uses script engine to detect vulnerabilities.
+
+Q23. Tcpdump + tshark for HTTP POSTs
+Commands:
+sudo tcpdump -i eth0 -w traffic.pcap -G 900 -W 1
+tshark -r traffic.pcap -Y "http.request.method == POST" -T fields -e ip.dst -e http.file_data
+Explanation:
+- Captures POST traffic and extracts data.
+
+Q24. Capture DNS queries and list frequent domains
+Commands:
+sudo tcpdump -i eth0 port 53 -w dns_queries.pcap -G 600 -W 1
+tshark -r dns_queries.pcap -Y "dns.qry.name" -T fields -e dns.qry.name | sort | uniq -c | sort -nr
+Explanation:
+- Finds top queried domain names.
+
+Q25. GPG key, encrypt, transfer, decrypt
+Commands:
+gpg --full-generate-key
+gpg -e -r "Name" file.txt
+scp file.txt.gpg user@remote:/path/
+gpg -d file.txt.gpg > file.txt
+Explanation:
+- Secure file transfer using GPG.
+
+Q26. Sign and verify file with GPG
+Commands:
+gpg --output file.sig --sign file.txt
+gpg --verify file.sig file.txt
+Explanation:
+- Verifies signer identity and file integrity.
+
+Q27. Export key and verify via email
+Commands:
+gpg --armor --export your@email.com > pubkey.asc
+mutt -s "Key" -a pubkey.asc -- someone@example.com
+fetchmail
+gpg --import pubkey.asc
+gpg --list-keys
+Explanation:
+- Sends and verifies public key via email.
+
+Q28. Generate secure passwords and encrypt
+Commands:
+for i in {1..10}; do openssl rand -base64 12; done > passwords.txt
+openssl enc -aes-256-cbc -salt -in passwords.txt -out passwords.enc
+Explanation:
+- Stores strong passwords securely.
+
+Q29. Self-signed cert and HTTPS test
+Commands:
+openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -nodes
+openssl s_server -key key.pem -cert cert.pem -accept 4433
+openssl s_client -connect localhost:4433
+Explanation:
+- Sets up and tests local HTTPS with OpenSSL.
+
+Q30. DSS signature and tamper detection
+Commands:
+openssl dsaparam -out dsa.param 2048
+openssl gendsa -out dsa_priv.pem dsa.param
+openssl dsa -in dsa_priv.pem -pubout -out dsa_pub.pem
+openssl dgst -sha256 -sign dsa_priv.pem -out sig.bin file.txt
+openssl dgst -sha256 -verify dsa_pub.pem -signature sig.bin file.txt
+# Modify file then reverify
+Explanation:
+- Demonstrates digital signature failure on file change.
